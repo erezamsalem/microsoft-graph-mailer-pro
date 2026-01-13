@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mailer-app
+  namespace: graph-webapp # Added this line
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mailer
+  template:
+    metadata:
+      labels:
+        app: mailer
+    spec:
+      containers:
+      - name: mailer-pro
+        image: graph-mailer-pro:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 5750
+        env:
+        - name: TENANT_ID
+          valueFrom: { secretKeyRef: { name: mailer-secrets, key: TENANT_ID } }
+        - name: CLIENT_ID
+          valueFrom: { secretKeyRef: { name: mailer-secrets, key: CLIENT_ID } }
+        - name: CLIENT_SECRET
+          valueFrom: { secretKeyRef: { name: mailer-secrets, key: CLIENT_SECRET } }
+        - name: USER_ID
+          valueFrom: { secretKeyRef: { name: mailer-secrets, key: USER_ID } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mailer-service
+  namespace: graph-webapp # Added this line
+spec:
+  type: NodePort
+  selector:
+    app: mailer
+  ports:
+    - port: 5750
+      targetPort: 5750
+      nodePort: 30750
